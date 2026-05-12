@@ -17,9 +17,12 @@
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  // Also tick in rAF so mobile (iOS) catches momentum scroll
+  // Also tick in rAF so mobile (iOS) catches momentum scroll (when scroll
+  // events are suspended). Read scroll from documentElement.scrollTop to be
+  // resilient against window.scrollY going stale on iOS Safari.
   (function rafTick() {
-    onScroll();
+    const scrolled = (document.scrollingElement || document.documentElement).scrollTop > 60;
+    nav.classList.toggle('scrolled', scrolled);
     requestAnimationFrame(rafTick);
   })();
 })();
@@ -118,25 +121,33 @@
 /*
  * Each .disco-ball-rope has a data-speed attribute (0..1). The ball's
  * vertical offset is recomputed every animation frame:
- *   translateY = scrollY * (1 - speed)
+ *   translateY = scrollOffset * (1 - speed)
  * speed=1.0 → moves with the page (no parallax)
  * speed=0.5 → appears to move at half scroll speed
  * speed=0.0 → fully fixed
  *
- * IMPORTANT: This uses a continuous requestAnimationFrame loop instead of
- * scroll events. iOS Safari only fires the 'scroll' event when a touch
- * gesture ends — NOT during momentum-scroll. An event-driven approach
- * means balls freeze during the flick and only jump at the end, which
- * reads as "no parallax". A constant rAF loop catches every frame on
- * every browser. We skip writes if scrollY didn't change to avoid
- * needless DOM mutation.
+ * iOS quirks this works around:
+ *
+ *  1. Scroll events only fire when a touch gesture ENDS — not during
+ *     momentum-scroll. So we drive everything from a continuous
+ *     requestAnimationFrame loop. rAF does run during momentum on
+ *     iOS 13+.
+ *
+ *  2. window.scrollY can go stale during momentum scroll (it
+ *     sometimes updates lazily). element.getBoundingClientRect().top
+ *     reflects the actual painted viewport position every frame, so
+ *     we derive scroll from the hero's rect instead.
+ *
+ *  3. A no-op passive touchmove listener nudges iOS to keep
+ *     scroll-related state fresh during long flicks. Cheap insurance.
  *
  * Respects prefers-reduced-motion: skips parallax entirely so balls
  * just sit at their initial positions.
  */
 (function initDiscoParallax() {
   const ropes = document.querySelectorAll('.disco-ball-rope');
-  if (!ropes.length) return;
+  const hero = document.querySelector('.hero');
+  if (!ropes.length || !hero) return;
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
@@ -146,15 +157,21 @@
     speed: parseFloat(el.dataset.speed) || 0.5,
   }));
 
-  let lastY = -1;
+  // Keep iOS scroll state ticking during momentum flicks (no-op handler).
+  document.addEventListener('touchmove', () => {}, { passive: true });
+
+  let lastY = NaN;
 
   function tick() {
-    const y = window.scrollY;
+    // Derive scroll offset from hero's painted position — robust against
+    // iOS Safari's stale window.scrollY during momentum scroll.
+    const y = -hero.getBoundingClientRect().top;
     if (y !== lastY) {
-      items.forEach(({ el, speed }) => {
+      for (let i = 0; i < items.length; i++) {
+        const { el, speed } = items[i];
         const dy = y * (1 - speed);
         el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
-      });
+      }
       lastY = y;
     }
     requestAnimationFrame(tick);

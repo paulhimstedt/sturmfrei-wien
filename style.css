@@ -44,7 +44,12 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;          /* hard cap horizontal scroll on mobile */
+  /* overflow-x: clip (not hidden). On iOS Safari, overflow:hidden on the
+     root element can break window-level scroll tracking — window.scrollY
+     goes stale during momentum scroll, which kills parallax. `clip` caps
+     horizontal overflow WITHOUT establishing a scroll container, so the
+     window keeps reporting accurate scroll state. */
+  overflow-x: clip;
 }
 
 body {
@@ -53,7 +58,7 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 img {
@@ -294,9 +299,13 @@ a {
   margin-top: calc(var(--size, 60px) * -0.5);
   /* slight tilt baked in — gives "real hanging object" feel */
   transform: rotate(var(--tilt, 0deg));
-  /* soft drop-shadow grounds the ball against the dark hero */
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5))
-          drop-shadow(0 0 18px rgba(184, 142, 204, 0.18));
+  /* Dimmed so the bright mirror-tile reflections don't blow out the hero
+     copy on screens we haven't profiled (cheap OLED phones, sunlit
+     viewing). The drop-shadows stay to ground the ball against the dark
+     hero background. */
+  filter: brightness(0.7) contrast(0.92)
+          drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55))
+          drop-shadow(0 0 18px rgba(184, 142, 204, 0.14));
   /* prevent ugly drag-image on click + reserve space cleanly while loading */
   pointer-events: none;
   user-select: none;
@@ -320,7 +329,12 @@ a {
 .hero {
   position: relative;
   z-index: 2;          /* creates stacking context for .disco-balls (z:1) + .hero-content (z:3) */
-  height: 100dvh;
+  /* 100svh = smallest viewport (URL bar visible) — height stays stable
+     when iOS Safari's URL bar collapses on first scroll. Using dvh here
+     would make the hero grow mid-scroll, causing the page to "jolt" and
+     visually breaking the parallax illusion. Fallback vh for older UAs. */
+  height: 100vh;
+  height: 100svh;
   min-height: 580px;
   display: flex;
   flex-direction: column;
