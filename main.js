@@ -117,11 +117,19 @@
 /* ─── DISCO-BALL PARALLAX ────────────────────────────────────── */
 /*
  * Each .disco-ball-rope has a data-speed attribute (0..1). The ball's
- * vertical offset is recomputed every scroll-tick:
+ * vertical offset is recomputed every animation frame:
  *   translateY = scrollY * (1 - speed)
  * speed=1.0 → moves with the page (no parallax)
  * speed=0.5 → appears to move at half scroll speed
  * speed=0.0 → fully fixed
+ *
+ * IMPORTANT: This uses a continuous requestAnimationFrame loop instead of
+ * scroll events. iOS Safari only fires the 'scroll' event when a touch
+ * gesture ends — NOT during momentum-scroll. An event-driven approach
+ * means balls freeze during the flick and only jump at the end, which
+ * reads as "no parallax". A constant rAF loop catches every frame on
+ * every browser. We skip writes if scrollY didn't change to avoid
+ * needless DOM mutation.
  *
  * Respects prefers-reduced-motion: skips parallax entirely so balls
  * just sit at their initial positions.
@@ -138,25 +146,21 @@
     speed: parseFloat(el.dataset.speed) || 0.5,
   }));
 
-  let ticking = false;
+  let lastY = -1;
 
-  function update() {
+  function tick() {
     const y = window.scrollY;
-    items.forEach(({ el, speed }) => {
-      const dy = y * (1 - speed);
-      el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
-    });
-    ticking = false;
+    if (y !== lastY) {
+      items.forEach(({ el, speed }) => {
+        const dy = y * (1 - speed);
+        el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
+      });
+      lastY = y;
+    }
+    requestAnimationFrame(tick);
   }
 
-  window.addEventListener('scroll', () => {
-    if (!ticking) {
-      requestAnimationFrame(update);
-      ticking = true;
-    }
-  }, { passive: true });
-
-  update();
+  requestAnimationFrame(tick);
 })();
 
 

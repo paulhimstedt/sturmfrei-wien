@@ -307,9 +307,13 @@ a {
    its 220px width fits within a 400px phone viewport without clipping. */
 @media (max-width: 600px) {
   .dball-1, .dball-5 { display: none; }
-  .dball-2 {              --size: 250px; --hang: 260px; }
-  .dball-3 {              --size: 200px; --hang: 170px; }
-  .dball-4 { --x: 68%;    --size: 220px; --hang: 320px; }
+  /* Hangs reduced ~30% vs the iPhone-14-Pro-Max-emulated values — on real
+     iOS Safari the dynamic viewport (URL bar / home indicator) takes a slice
+     off the hero height, so the same hangs felt deeper than expected. These
+     bring balls higher so they don't crowd the eyebrow/title text. */
+  .dball-2 {              --size: 250px; --hang: 180px; }
+  .dball-3 {              --size: 200px; --hang: 120px; }
+  .dball-4 { --x: 68%;    --size: 220px; --hang: 220px; }
 }
 
 /* ─── HERO ────────────────────────────────────────────────────── */
