@@ -27,13 +27,14 @@ let renderer, scene, camera, ballGroup;
 let orbLights = [], beamMeshes = [], mistPoints = null;
 let rafId = null, lastTime = 0;
 let ballRotY = 0;
-let scrollSmooth = 0;   // eased version — trails behind for silky feel
+let scrollSmooth = 0;   // animation progress 0=hero, 1=compact (time-based, not scroll-position)
 let scrollPrev = 0;     // previous raw scrollY for velocity
 let scrollVelocity = 0; // px/s — drives extra spin
 let vpW = 0, vpH = 0;
 let ballSX = 0, ballSY = 0; // ball projected centre on screen
 let tanHalfH = 0, tanHalfV = 0;  // precomputed for screen↔world
 let heroBallX = 0;               // ball world-X in hero position
+let heroBallScale = 1.0;         // hero-state scale — shrinks the ball on narrow viewports
 
 // ─── INIT ─────────────────────────────────────────────────────────
 function init() {
@@ -64,6 +65,10 @@ function init() {
   onResize();   // sizes canvas + computes ball offset
   window.addEventListener('resize', onResize, { passive: true });
   document.addEventListener('visibilitychange', onVis);
+
+  // If the page is restored mid-scroll (back/forward nav, hash link), skip
+  // the intro animation — start in the compact state immediately.
+  scrollSmooth = window.scrollY > 4 ? 1 : 0;
 
   animate(0);
 }
@@ -301,7 +306,17 @@ function onResize() {
   heroBallX = xShift;
   ballGroup.position.x = xShift;
   ballGroup.position.y = 0;
-  ballGroup.scale.setScalar(1.0);
+
+  // Hero-state scale by viewport width — keeps the ball roughly viewport-proportional
+  // so a phone doesn't get a 580px disco ball on a 390px screen. Beams + mist follow
+  // the same scale so the whole atmospheric assembly stays proportionate.
+  heroBallScale = vpW < 480 ? 0.42 :
+                  vpW < 768 ? 0.62 :
+                  vpW < 1024 ? 0.82 :
+                  1.0;
+  ballGroup.scale.setScalar(heroBallScale);
+  beamMeshes.forEach(b => b.scale.setScalar(heroBallScale));
+  if (mistPoints) mistPoints.scale.setScalar(heroBallScale);
 
   // Precompute trig for screen↔world conversions (used every frame in animate)
   const vFovRad = 42 * Math.PI / 180;
@@ -352,7 +367,6 @@ function animate(time) {
 
   // ── Read scroll every frame — works on mobile where scroll events are unreliable
   const rawScroll = window.scrollY;
-  const scrollTarget = Math.min(1, rawScroll / (vpH * 1.4));
 
   // ── Scroll velocity (px/s) — drives extra spin
   const rawVelocity = dt > 0 ? (rawScroll - scrollPrev) / dt : 0;
@@ -360,8 +374,19 @@ function animate(time) {
   // Smooth the velocity so spin doesn't stutter
   scrollVelocity += (rawVelocity - scrollVelocity) * Math.min(1, dt * 8);
 
-  // ── Scroll lerp — 0.08 gives a silkier, more liquid feel than 0.12
-  scrollSmooth += (scrollTarget - scrollSmooth) * 0.08;
+  // ── Time-based animation: binary target (0=hero, 1=compact) driven by whether
+  //    the user has scrolled past a small threshold. Forward and reverse have
+  //    different durations — coming back to hero is snappier.
+  const SCROLL_THRESHOLD = 4;     // px tolerance near the very top
+  const FORWARD_DURATION = 0.9;   // seconds, hero → compact
+  const REVERSE_DURATION = 0.4;   // seconds, compact → hero (snappier)
+
+  const targetT = rawScroll > SCROLL_THRESHOLD ? 1 : 0;
+  if (targetT > scrollSmooth) {
+    scrollSmooth = Math.min(1, scrollSmooth + dt / FORWARD_DURATION);
+  } else if (targetT < scrollSmooth) {
+    scrollSmooth = Math.max(0, scrollSmooth - dt / REVERSE_DURATION);
+  }
   const sp = scrollSmooth;
 
   // ── Ball spin — base rate + scroll-velocity boost
@@ -406,8 +431,10 @@ function animate(time) {
   // TRANSIT (HERO_END→TRANSIT_END): bezier arc up to nav anchor, beams fade
   // COMPACT (>= TRANSIT_END): ball locked next to .nav-ball-space via clip
   // ─────────────────────────────────────────────────────────────────
-  const HERO_END    = 0.12;
-  const TRANSIT_END = 0.85;
+  // sp is already 0..1 deterministic — no dead bands needed. Tiny epsilons just
+  // handle the exact-equals-0 / exact-equals-1 boundary cleanly.
+  const HERO_END    = 0.001;
+  const TRANSIT_END = 0.999;
 
   // Anchor ball to the .nav-ball-space placeholder inside the nav-right group.
   // Nav is position:fixed so this stays correct regardless of scroll.
@@ -440,10 +467,16 @@ function animate(time) {
     // ── HERO: full scene visible, no clip-path
     ballGroup.position.x = heroBallX;
     ballGroup.position.y = 0;
-    ballGroup.scale.setScalar(1.0);
+    ballGroup.scale.setScalar(heroBallScale);
 
-    beamMeshes.forEach(b => { b.material.opacity = b.userData.baseOpacity; });
-    if (mistPoints) mistPoints.material.opacity = mistPoints.userData.baseOpacity;
+    beamMeshes.forEach(b => {
+      b.material.opacity = b.userData.baseOpacity;
+      b.scale.setScalar(heroBallScale);
+    });
+    if (mistPoints) {
+      mistPoints.material.opacity = mistPoints.userData.baseOpacity;
+      mistPoints.scale.setScalar(heroBallScale);
+    }
 
     wrap.style.clipPath = 'none';
     zIndex = '1';
@@ -462,7 +495,7 @@ function animate(time) {
 
   } else {
     // ── TRANSIT: ball physically travels along the cubic arc upward ──
-    const t = (sp - HERO_END) / (TRANSIT_END - HERO_END);
+    const t = sp;   // sp already spans 0..1 over the full animation window
 
     const te = t < 0.75
       ? easeInOutSine(t / 0.75) * 0.85
@@ -474,11 +507,17 @@ function animate(time) {
     ballGroup.position.x = screenToWorldX(sx);
     ballGroup.position.y = screenToWorldY(sy);
 
-    ballGroup.scale.setScalar(1.0 + (compScale - 1.0) * te);
+    ballGroup.scale.setScalar(heroBallScale + (compScale - heroBallScale) * te);
 
     const fadeOut = easeInOutSine(t);
-    beamMeshes.forEach(b => { b.material.opacity = b.userData.baseOpacity * (1 - fadeOut); });
-    if (mistPoints) mistPoints.material.opacity = mistPoints.userData.baseOpacity * (1 - fadeOut);
+    beamMeshes.forEach(b => {
+      b.material.opacity = b.userData.baseOpacity * (1 - fadeOut);
+      b.scale.setScalar(heroBallScale);
+    });
+    if (mistPoints) {
+      mistPoints.material.opacity = mistPoints.userData.baseOpacity * (1 - fadeOut);
+      mistPoints.scale.setScalar(heroBallScale);
+    }
 
     // NO clip-path during transit — the wrap's z-index lets the ball pass
     // through transparent section backgrounds without a spotlight artefact.
