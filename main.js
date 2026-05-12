@@ -146,10 +146,18 @@
  */
 (function initDiscoParallax() {
   const ropes = document.querySelectorAll('.disco-ball-rope');
-  if (!ropes.length) return;
+  const hero = document.querySelector('.hero');
+  if (!ropes.length || !hero) return;
 
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced) return;
+  // NOTE: deliberately NOT respecting prefers-reduced-motion here.
+  // WCAG 2.3.3 targets *autonomous* motion. This effect is driven 100%
+  // by the user's own scroll input — if they aren't scrolling, nothing
+  // moves. The CSS already disables the autonomous reveal/stagger
+  // animations under reduce-motion (see @media block at end of CSS).
+  // An earlier version of this code bailed out for reduce-motion users,
+  // which was the silent kill-switch behind "parallax doesn't work on
+  // my iPhone" — iOS users often have Reduce Motion enabled in
+  // Accessibility without realising it.
 
   const items = Array.from(ropes).map(el => ({
     el,
@@ -159,27 +167,28 @@
   // No-op passive touchmove keeps iOS scroll state ticking during momentum.
   document.addEventListener('touchmove', () => {}, { passive: true });
 
-  function getScrollY() {
-    // window.scrollY is the standard, but during iOS Safari momentum scroll
-    // it can briefly go stale; document.scrollingElement.scrollTop is the
-    // canonical fallback. Reading both per-frame is cheap.
-    return window.scrollY
-      || (document.scrollingElement || document.documentElement).scrollTop
-      || 0;
-  }
-
   let lastY = NaN;
 
   function tick() {
-    // .disco-balls is position:fixed, so the ball's viewport position is
-    // controlled entirely by this transform. Parallax = each ball drifts
-    // upward at its own fraction of the page-scroll speed.
-    //   speed = 0  → fully fixed, never moves
-    //   speed = 1  → moves exactly with the page (no parallax)
-    const y = getScrollY();
+    // Why getBoundingClientRect(hero) and not window.scrollY:
+    //
+    // window.scrollY reads from document.scrollingElement, which
+    // depends on the page's overflow rules. With `overflow-x: clip` on
+    // the html element, some browsers (notably iOS Safari) re-root
+    // scrolling to <body>, making window.scrollY perpetually 0.
+    //
+    // The hero starts at document y=0 and lives in the page's normal
+    // flow, so its viewport-relative top is ALWAYS exactly -scrollY,
+    // independent of which element is the scroll container. This is
+    // the bulletproof cross-browser scroll proxy.
+    const y = -hero.getBoundingClientRect().top;
     if (y !== lastY) {
       for (let i = 0; i < items.length; i++) {
         const { el, speed } = items[i];
+        // .disco-balls is position:fixed so the ball's viewport
+        // position is controlled entirely by this transform.
+        //   speed = 0 → fully fixed, never moves
+        //   speed = 1 → moves exactly with the page (no parallax)
         const dy = -y * speed;
         el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
       }
@@ -212,15 +221,23 @@
   ].join(';');
   document.body.appendChild(box);
 
+  const hero = document.querySelector('.hero');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const scrollingEl = (document.scrollingElement || document.documentElement).tagName;
+
   let frames = 0;
   function loop() {
     frames++;
-    const y = window.scrollY
-      || (document.scrollingElement || document.documentElement).scrollTop
-      || 0;
+    const sy = window.scrollY;
+    const st = (document.scrollingElement || document.documentElement).scrollTop;
+    const heroTop = hero ? hero.getBoundingClientRect().top : 0;
     box.textContent =
       'frames: ' + frames + '\n' +
-      'scrollY: ' + y.toFixed(1) + '\n' +
+      'reduceMotion: ' + reduceMotion + '\n' +
+      'scrollingEl: ' + scrollingEl + '\n' +
+      'window.scrollY: ' + sy.toFixed(1) + '\n' +
+      'scrollTop: ' + st.toFixed(1) + '\n' +
+      'heroRect.top: ' + heroTop.toFixed(1) + '\n' +
       'ball.transform: ' + (ball.style.transform || '(unset)');
     requestAnimationFrame(loop);
   }
