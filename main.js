@@ -146,8 +146,7 @@
  */
 (function initDiscoParallax() {
   const ropes = document.querySelectorAll('.disco-ball-rope');
-  const hero = document.querySelector('.hero');
-  if (!ropes.length || !hero) return;
+  if (!ropes.length) return;
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) return;
@@ -157,19 +156,31 @@
     speed: parseFloat(el.dataset.speed) || 0.5,
   }));
 
-  // Keep iOS scroll state ticking during momentum flicks (no-op handler).
+  // No-op passive touchmove keeps iOS scroll state ticking during momentum.
   document.addEventListener('touchmove', () => {}, { passive: true });
+
+  function getScrollY() {
+    // window.scrollY is the standard, but during iOS Safari momentum scroll
+    // it can briefly go stale; document.scrollingElement.scrollTop is the
+    // canonical fallback. Reading both per-frame is cheap.
+    return window.scrollY
+      || (document.scrollingElement || document.documentElement).scrollTop
+      || 0;
+  }
 
   let lastY = NaN;
 
   function tick() {
-    // Derive scroll offset from hero's painted position — robust against
-    // iOS Safari's stale window.scrollY during momentum scroll.
-    const y = -hero.getBoundingClientRect().top;
+    // .disco-balls is position:fixed, so the ball's viewport position is
+    // controlled entirely by this transform. Parallax = each ball drifts
+    // upward at its own fraction of the page-scroll speed.
+    //   speed = 0  → fully fixed, never moves
+    //   speed = 1  → moves exactly with the page (no parallax)
+    const y = getScrollY();
     if (y !== lastY) {
       for (let i = 0; i < items.length; i++) {
         const { el, speed } = items[i];
-        const dy = y * (1 - speed);
+        const dy = -y * speed;
         el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
       }
       lastY = y;
@@ -178,6 +189,42 @@
   }
 
   requestAnimationFrame(tick);
+})();
+
+
+/* ─── DEBUG OVERLAY (gated by ?debug=1) ──────────────────────── */
+/* Lets you confirm on-device whether rAF is running and what scrollY /
+   transforms look like. Useful when desktop emulation can't reproduce a
+   mobile-only bug. Append ?debug=1 to the URL to enable. */
+(function initDebugOverlay() {
+  if (!/[?&]debug=1\b/.test(location.search)) return;
+
+  const ball = document.querySelector('.disco-ball-rope');
+  if (!ball) return;
+
+  const box = document.createElement('div');
+  box.style.cssText = [
+    'position:fixed', 'top:70px', 'right:8px', 'z-index:9999',
+    'font:11px/1.35 ui-monospace,Menlo,monospace',
+    'background:rgba(0,0,0,0.78)', 'color:#9ABD6B',
+    'padding:8px 10px', 'border-radius:6px',
+    'pointer-events:none', 'max-width:60vw', 'white-space:pre',
+  ].join(';');
+  document.body.appendChild(box);
+
+  let frames = 0;
+  function loop() {
+    frames++;
+    const y = window.scrollY
+      || (document.scrollingElement || document.documentElement).scrollTop
+      || 0;
+    box.textContent =
+      'frames: ' + frames + '\n' +
+      'scrollY: ' + y.toFixed(1) + '\n' +
+      'ball.transform: ' + (ball.style.transform || '(unset)');
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
 })();
 
 

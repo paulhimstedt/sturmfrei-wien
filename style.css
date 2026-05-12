@@ -240,11 +240,19 @@ a {
  *   - ::after with off-centre radial → fixed specular highlight
  */
 .disco-balls {
-  position: absolute;
+  /* position: fixed (NOT absolute). Anchoring to the viewport — instead of
+     to the hero's scrolling layer — is what actually makes parallax work
+     on real iOS Safari. With absolute positioning, balls live inside the
+     hero's composited scroll layer and the compositor on iOS applies the
+     hero's scroll transform to them per frame; any JS-applied transform
+     on top is fighting that and visually loses during momentum scroll.
+     Fixed positioning takes balls out of that layer — the compositor
+     repaints them every frame from the latest JS transform value. */
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 100%;
+  height: 100svh;
   pointer-events: none;
   z-index: 1;
   overflow: visible;
@@ -924,6 +932,15 @@ body.ball-compact .sticky-cta {
     align-items: center;
     text-align: center;
     padding-bottom: 5.5rem; /* clear sticky CTA */
+  }
+
+  /* The three footer links (email · instagram · location) don't fit on
+     one row at phone widths — together they exceed 375px. Stacking them
+     keeps everything centered and prevents the rightmost item (the
+     location string) from being clipped off-screen by `overflow-x: clip`. */
+  .footer-links {
+    flex-direction: column;
+    gap: 0.6rem;
   }
 }
 
