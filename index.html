@@ -10,16 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=4">
-
-  <!-- Three.js importmap — must come before any module scripts -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"
-    }
-  }
-  </script>
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 
@@ -44,21 +35,42 @@
          aria-label="Buchungsseite öffnen">
         Reservieren
       </a>
-      <!-- Disco ball lands here when user scrolls past hero (see disco-ball.js) -->
-      <span class="nav-ball-space" aria-hidden="true"></span>
     </div>
   </nav>
 
   <!-- ============================================================
        1. HERO
        ============================================================ -->
-  <!-- Three.js disco ball — floats over page, transitions hero → sticky CTA -->
-  <div id="disco-wrap" aria-hidden="true">
-    <canvas id="disco-canvas"></canvas>
-  </div>
-
   <section class="hero" id="hero" aria-label="Hero">
     <div class="hero-overlay" aria-hidden="true"></div>
+
+    <!-- Disco-ball garland: 5 balls hanging from the ceiling in a W shape.
+         All sizing/positioning lives in CSS (.dball-1 ... .dball-5) so the
+         @media (max-width: 600px) block can properly override on mobile —
+         inline styles would beat any class selector. data-speed stays as an
+         attribute since the parallax JS reads it directly. -->
+    <div class="disco-balls" aria-hidden="true">
+      <div class="disco-ball-rope dball-1" data-speed="0.08">
+        <span class="disco-ball-string"></span>
+        <img class="disco-ball-img" src="content/discoball.gif" alt="">
+      </div>
+      <div class="disco-ball-rope dball-2" data-speed="0.25">
+        <span class="disco-ball-string"></span>
+        <img class="disco-ball-img" src="content/discoball.gif" alt="">
+      </div>
+      <div class="disco-ball-rope dball-3" data-speed="0.10">
+        <span class="disco-ball-string"></span>
+        <img class="disco-ball-img" src="content/discoball.gif" alt="">
+      </div>
+      <div class="disco-ball-rope dball-4" data-speed="0.22">
+        <span class="disco-ball-string"></span>
+        <img class="disco-ball-img" src="content/discoball.gif" alt="">
+      </div>
+      <div class="disco-ball-rope dball-5" data-speed="0.05">
+        <span class="disco-ball-string"></span>
+        <img class="disco-ball-img" src="content/discoball.gif" alt="">
+      </div>
+    </div>
 
     <div class="hero-content">
       <p class="hero-eyebrow reveal-item"
@@ -265,8 +277,7 @@
   </div>
   -->
 
-  <script src="main.js?v=4"></script>
-  <script type="module" src="disco-ball.js?v=4"></script>
+  <script src="main.js?v=19"></script>
 
   <!-- Setmore Booking Widget — converts every .anywhere-book-now-button into an inline-modal trigger -->
   <script id="anywhere_book_now_script" src="https://assets.setmore.com/integration/book-now/live/v1/anywhere-book-now.js"></script>

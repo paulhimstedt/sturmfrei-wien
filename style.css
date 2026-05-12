@@ -191,15 +191,6 @@ a {
   gap: 1rem;
 }
 
-/* Disco-ball anchor inside the nav — reserves layout space so the
-   surrounding elements don't shift when the ball arrives. */
-.nav-ball-space {
-  display: inline-block;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
 
 .lang-toggle {
   background: none;
@@ -231,53 +222,110 @@ a {
   opacity: 0.5;
 }
 
-/* ─── DISCO BALL WRAP ────────────────────────────────────────── */
+/* ─── DISCO-BALL GARLAND ─────────────────────────────────────── */
 /*
- * z-index layering:
- *   1 = disco-wrap (hero background — behind page text)
- *   2 = .hero (establishes stacking context above canvas)
- *  100 = .nav
- *  150 = .sticky-cta
- *  200 = disco-wrap when compact (floats above sticky bar)
+ * 5 disco balls hanging from the top of the hero. Each is its own
+ * absolutely-positioned "rope" with a string and an orb. JS in main.js
+ * applies a transform: translate3d() per scroll frame to drive the
+ * multi-depth parallax (slower balls = farther back).
+ *
+ * The orb is built from three layers:
+ *   - base radial gradient → spherical shading
+ *   - ::before with conic-gradient → spinning mirror-tile pattern
+ *   - ::after with off-centre radial → fixed specular highlight
  */
-#disco-wrap {
-  position: fixed;
-  z-index: 1;          /* behind all page content in hero state */
+.disco-balls {
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  right: 0;
+  height: 100%;
   pointer-events: none;
-  overflow: hidden;
+  z-index: 1;
+  overflow: visible;
+}
+
+.disco-ball-rope {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  transform: translate3d(-50%, 0, 0);   /* no-JS fallback centering */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   will-change: transform;
 }
 
-#disco-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+/* Per-ball desktop values (W-shape: balls 1/3/5 high, balls 2/4 low+big).
+   Ball 3 small and high so it stays ABOVE the eyebrow. Ball 2 nudged up+left,
+   ball 4 dropped lower + biggest. */
+.dball-1 { --x: 12%; --size: 290px; --hang:  160px; --tilt:  10deg; }
+.dball-2 { --x: 24%; --size: 420px; --hang: 230px; --tilt:  -7deg; }
+.dball-3 { --x: 50%; --size: 270px; --hang:  80px; --tilt:   4deg; }
+.dball-4 { --x: 75%; --size: 480px; --hang: 380px; --tilt: -12deg; }
+.dball-5 { --x: 88%; --size: 270px; --hang: 150px; --tilt:   8deg; }
+
+.disco-ball-string {
+  width: 1px;
+  height: var(--hang, 100px);
+  /* Chain peaks in the upper-middle and fades to transparent before reaching
+     the ball. This stops it from visibly "piercing" through the ball's bottom
+     transparent padding without changing layout — ball position stays anchored
+     to --hang via the margin-top trick on .disco-ball-img. */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.50) 55%,
+    rgba(255, 255, 255, 0.20) 82%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  flex-shrink: 0;
 }
 
-/* Compact state: float above sticky bar */
-body.ball-compact #disco-wrap {
-  z-index: 200;
+.disco-ball-img {
+  width: var(--size, 60px);
+  height: auto;              /* preserve aspect ratio — never squish */
+  display: block;
+  /* Pull the image up so the string's bottom lands at the VISIBLE ball
+     centre — not the geometric image centre. This GIF has the ball in the
+     upper-middle of its canvas (ball spans roughly y=30 to y=380 out of
+     480 px), so the visible centre is at ~43% of image height, not 50%.
+     If the source asset changes, retune this multiplier accordingly. */
+  margin-top: calc(var(--size, 60px) * -0.5);
+  /* slight tilt baked in — gives "real hanging object" feel */
+  transform: rotate(var(--tilt, 0deg));
+  /* soft drop-shadow grounds the ball against the dark hero */
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 18px rgba(184, 142, 204, 0.18));
+  /* prevent ugly drag-image on click + reserve space cleanly while loading */
   pointer-events: none;
-  overflow: visible; /* allow ball to visually overflow into the bar slightly */
+  user-select: none;
+}
+
+/* Mobile: hide balls 1 & 5 (flanking), keep balls 2/3/4 visible.
+   Sizes ~50% larger than the previous pass; ball 4 is x-shifted to 68% so
+   its 220px width fits within a 400px phone viewport without clipping. */
+@media (max-width: 600px) {
+  .dball-1, .dball-5 { display: none; }
+  .dball-2 {              --size: 250px; --hang: 260px; }
+  .dball-3 {              --size: 200px; --hang: 170px; }
+  .dball-4 { --x: 68%;    --size: 220px; --hang: 320px; }
 }
 
 /* ─── HERO ────────────────────────────────────────────────────── */
 .hero {
   position: relative;
-  z-index: 2;          /* creates stacking context above #disco-wrap (z:1) */
+  z-index: 2;          /* creates stacking context for .disco-balls (z:1) + .hero-content (z:3) */
   height: 100dvh;
   min-height: 580px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  /* No overflow: hidden — disco balls need to drift past the hero boundary as
+     the user scrolls into the next section (multi-depth parallax effect). */
   text-align: center;
-  background: transparent; /* let the canvas through */
+  background: transparent;
 }
 
 /* Thin readability vignette over the 3D canvas */
@@ -288,8 +336,8 @@ body.ball-compact #disco-wrap {
   background: linear-gradient(
     175deg,
     rgba(8, 10, 5, 0.05) 0%,
-    rgba(8, 10, 5, 0.10) 50%,
-    rgba(8, 10, 5, 0.65) 100%
+    rgba(8, 10, 5, 0.08) 50%,
+    rgba(8, 10, 5, 0.28) 100%
   );
   pointer-events: none;
 }
@@ -299,8 +347,8 @@ body.ball-compact #disco-wrap {
   content: '';
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 45%;
-  background: linear-gradient(to top, rgba(8,10,5,0.60), transparent);
+  height: 65%;
+  background: linear-gradient(to top, rgba(8,10,5,0.22), transparent);
 }
 
 .hero-content {
@@ -872,13 +920,13 @@ body.ball-compact .sticky-cta {
   }
 }
 
-/* Content sections sit above the ball during transit (z:2) and properly
-   occlude it with a solid background. Compact ball (z:200) floats above
-   everything when scrolled past the hero. */
+/* Sections sit BELOW the hero in z-stacking (z:1 < hero's z:2) so that
+   disco balls inside the hero's stacking context can drift visibly into
+   the section-2 area via parallax. Solid bg still hides the body color. */
 .space, .gallery-section, .rates-section, .footer {
   position: relative;
-  z-index: 3;
-  background: var(--bg); /* solid — cleanly hides the ball while it's behind these sections */
+  z-index: 1;
+  background: var(--bg);
 }
 
 /* Reduce motion for users who prefer it */

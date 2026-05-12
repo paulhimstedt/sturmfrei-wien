@@ -114,6 +114,52 @@
 })();
 
 
+/* ─── DISCO-BALL PARALLAX ────────────────────────────────────── */
+/*
+ * Each .disco-ball-rope has a data-speed attribute (0..1). The ball's
+ * vertical offset is recomputed every scroll-tick:
+ *   translateY = scrollY * (1 - speed)
+ * speed=1.0 → moves with the page (no parallax)
+ * speed=0.5 → appears to move at half scroll speed
+ * speed=0.0 → fully fixed
+ *
+ * Respects prefers-reduced-motion: skips parallax entirely so balls
+ * just sit at their initial positions.
+ */
+(function initDiscoParallax() {
+  const ropes = document.querySelectorAll('.disco-ball-rope');
+  if (!ropes.length) return;
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+
+  const items = Array.from(ropes).map(el => ({
+    el,
+    speed: parseFloat(el.dataset.speed) || 0.5,
+  }));
+
+  let ticking = false;
+
+  function update() {
+    const y = window.scrollY;
+    items.forEach(({ el, speed }) => {
+      const dy = y * (1 - speed);
+      el.style.transform = `translate3d(-50%, ${dy.toFixed(1)}px, 0)`;
+    });
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(update);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  update();
+})();
+
+
 /* ─── SMOOTH ANCHOR SCROLL (for same-page links) ─────────────── */
 (function initSmoothScroll() {
   document.querySelectorAll('a[href^="#"]:not([href="#setmore-placeholder"])').forEach(link => {
