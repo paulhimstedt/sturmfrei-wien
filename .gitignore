@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude harness configs — local only, not for public repo
+.claude/
+
+# WhatsApp originals — kept locally as archive, not deployed.
+# The lowercase-renamed copies in content/ are the ones we actually serve.
+content-provided/
+
+# Old stock content/IMG_* files are removed from disk before commit; this
+# rule is belt-and-braces in case any new IMG_* sneak in later.
+content/IMG_*.JPG
+content/IMG_*.jpg

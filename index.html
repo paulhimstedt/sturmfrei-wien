@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sturmfrei Wien — Privater Partyraum im 18. Bezirk</title>
+  <meta name="description" content="Sturmfrei Wien: privater Partyraum im 18. Wiener Gemeindebezirk. Billard, Darts, Karaoke und Discokugeln. Ideal für Geburtstage und Feiern bis 40 Personen.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- Three.js importmap — must come before any module scripts -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION
+       ============================================================ -->
+  <nav class="nav" id="nav" role="navigation" aria-label="Main navigation">
+    <span class="nav-brand">Sturmfrei Wien</span>
+    <div class="nav-right">
+      <button type="button" class="lang-toggle" id="langToggle" aria-label="Sprache wechseln / switch language">
+        <span class="lang-opt" data-lang="de">DE</span>
+        <span class="lang-sep" aria-hidden="true">/</span>
+        <span class="lang-opt" data-lang="en">EN</span>
+      </button>
+      <a href="https://sturmfrei-wien.setmore.com"
+         class="nav-cta anywhere-book-now-button"
+         data-booking-url="https://sturmfrei-wien.setmore.com"
+         data-new-tab="false"
+         rel="noopener"
+         data-de="Reservieren"
+         data-en="Reserve"
+         aria-label="Buchungsseite öffnen">
+        Reservieren
+      </a>
+      <!-- Disco ball lands here when user scrolls past hero (see disco-ball.js) -->
+      <span class="nav-ball-space" aria-hidden="true"></span>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       1. HERO
+       ============================================================ -->
+  <!-- Three.js disco ball — floats over page, transitions hero → sticky CTA -->
+  <div id="disco-wrap" aria-hidden="true">
+    <canvas id="disco-canvas"></canvas>
+  </div>
+
+  <section class="hero" id="hero" aria-label="Hero">
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow reveal-item"
+         data-de="Privater Partyraum · Wien 18."
+         data-en="Private Party Room · Vienna 18th">Privater Partyraum · Wien 18.</p>
+
+      <h1 class="hero-title reveal-item">
+        <span data-de="Sturmfrei" data-en="Sturmfrei">Sturmfrei</span><br>
+        <em data-de="Wien" data-en="Wien">Wien</em>
+      </h1>
+
+      <p class="hero-tagline reveal-item"
+         data-de="Billard · Darts · Disco|Bis zu 40 Gäste. Dein Abend."
+         data-en="Pool · Darts · Disco|Up to 40 guests. Your night.">
+        Billard · Darts · Disco<br>Bis zu 40 Gäste. Dein Abend.
+      </p>
+
+      <a href="https://sturmfrei-wien.setmore.com"
+         class="btn-primary reveal-item anywhere-book-now-button"
+         data-booking-url="https://sturmfrei-wien.setmore.com"
+         data-new-tab="false"
+         rel="noopener"
+         data-de="Jetzt anfragen"
+         data-en="Request a date"
+         aria-label="Buchungsseite öffnen">
+        Jetzt anfragen
+      </a>
+    </div>
+
+    <div class="hero-scroll-hint reveal-item" aria-hidden="true">↓</div>
+  </section>
+
+  <!-- ============================================================
+       2. THE SPACE
+       ============================================================ -->
+  <section class="space section-reveal" id="space" aria-label="Der Raum">
+    <div class="space-media">
+      <img
+        src="content/pool-table.jpg"
+        data-de-alt="Freund am Billardtisch im Partyraum, Spiegel im Hintergrund"
+        data-en-alt="Friend playing at the pool table, mirror in the background"
+        alt="Freund am Billardtisch im Partyraum, Spiegel im Hintergrund"
+        loading="lazy"
+        width="900"
+        height="1200"
+      >
+    </div>
+    <div class="space-text">
+      <span class="label" data-de="Der Raum" data-en="The Space">Der Raum</span>
+      <h2 class="section-title">
+        <span data-de="Ein Raum, gemacht" data-en="A room built">Ein Raum, gemacht</span><br>
+        <em data-de="für deinen Abend." data-en="for the night.">für deinen Abend.</em>
+      </h2>
+      <p class="space-description"
+         data-de="Privater Partyraum im 18. Bezirk, nur wenige Gehminuten von der U6 Währinger Straße. Ideal für Geburtstage, kleine Events und Feiern im Freundeskreis. Bis zu 40 Personen."
+         data-en="Private party room in Vienna's 18th district, just a few minutes from U6 Währinger Straße. Ideal for birthdays, small events, and gatherings with friends. Up to 40 people.">
+        Privater Partyraum im 18. Bezirk, nur wenige Gehminuten von der U6 Währinger Straße. Ideal für Geburtstage, kleine Events und Feiern im Freundeskreis. Bis zu 40 Personen.
+      </p>
+      <ul class="features" role="list">
+        <li>
+          <span class="feature-dot" style="background: var(--accent-green)" aria-hidden="true"></span>
+          <span data-de="Billardtisch" data-en="Pool table">Billardtisch</span>
+        </li>
+        <li>
+          <span class="feature-dot" style="background: var(--accent-purple)" aria-hidden="true"></span>
+          <span data-de="Darts" data-en="Darts">Darts</span>
+        </li>
+        <li>
+          <span class="feature-dot" style="background: var(--accent-yellow)" aria-hidden="true"></span>
+          <span data-de="Karaoke-Anlage" data-en="Karaoke system">Karaoke-Anlage</span>
+        </li>
+        <li>
+          <span class="feature-dot" style="background: var(--accent-purple)" aria-hidden="true"></span>
+          <span data-de="Gemütlicher Loungebereich" data-en="Cosy lounge area">Gemütlicher Loungebereich</span>
+        </li>
+        <li>
+          <span class="feature-dot" style="background: var(--text-muted)" aria-hidden="true"></span>
+          <span data-de="Spieltisch · Kühlschrank · Partybeleuchtung" data-en="Game table · fridge · party lighting">Spieltisch · Kühlschrank · Partybeleuchtung</span>
+        </li>
+        <li>
+          <span class="feature-dot" style="background: var(--accent-green)" aria-hidden="true"></span>
+          <span data-de="Eigene Getränke willkommen" data-en="Bring your own drinks">Eigene Getränke willkommen</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3. GALLERY
+       ============================================================ -->
+  <section class="gallery-section section-reveal" id="gallery" aria-label="Galerie">
+    <div class="gallery-header">
+      <span class="label" data-de="Galerie" data-en="Gallery">Galerie</span>
+      <h2 class="section-title">
+        <em data-de="Die Stimmung." data-en="The vibe.">Die Stimmung.</em>
+      </h2>
+    </div>
+    <div class="gallery-grid" role="list">
+      <div class="gallery-item" role="listitem">
+        <img src="content/dance-party.jpg"
+             data-de-alt="Gäste tanzen ausgelassen im Partyraum"
+             data-en-alt="Guests dancing in the party room"
+             alt="Gäste tanzen ausgelassen im Partyraum" loading="lazy">
+      </div>
+      <div class="gallery-item" role="listitem">
+        <img src="content/lounge-cards.jpg"
+             data-de-alt="Gruppe spielt Karten am Couchtisch im Loungebereich"
+             data-en-alt="Group playing cards at the lounge coffee table"
+             alt="Gruppe spielt Karten am Couchtisch im Loungebereich" loading="lazy">
+      </div>
+      <div class="gallery-item" role="listitem">
+        <img src="content/dj.jpg"
+             data-de-alt="DJ-Set mit Mixer im Loungebereich"
+             data-en-alt="DJ set with mixer in the lounge"
+             alt="DJ-Set mit Mixer im Loungebereich" loading="lazy">
+      </div>
+      <div class="gallery-item" role="listitem">
+        <img src="content/karaoke.jpg"
+             data-de-alt="Karaoke unter der Discokugel-Decke"
+             data-en-alt="Karaoke under the disco-ball ceiling"
+             alt="Karaoke unter der Discokugel-Decke" loading="lazy">
+      </div>
+      <div class="gallery-item" role="listitem">
+        <img src="content/cards-discoballs.jpg"
+             data-de-alt="Spielkarten und Mini-Discokugeln am Tisch"
+             data-en-alt="Playing cards and mini disco balls on the table"
+             alt="Spielkarten und Mini-Discokugeln am Tisch" loading="lazy">
+      </div>
+      <div class="gallery-item" role="listitem">
+        <img src="content/disco-pisco.jpg"
+             data-de-alt="Zwei Gäste mit Drinks unter dem Disco-Pisco-Poster"
+             data-en-alt="Two guests with drinks beneath the Disco Pisco poster"
+             alt="Zwei Gäste mit Drinks unter dem Disco-Pisco-Poster" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       4. BOOK NOW
+       ============================================================ -->
+  <section class="book-section section-reveal" id="book" aria-label="Buchung">
+    <div class="book-inner">
+      <span class="label" data-de="Buchung" data-en="Booking">Buchung</span>
+      <h2 class="book-title">
+        <span data-de="Bereit für" data-en="Ready for">Bereit für</span><br>
+        <em data-de="deinen Abend?" data-en="your night?">deinen Abend?</em>
+      </h2>
+      <p class="book-description"
+         data-de="Wähle Datum und Uhrzeit. Wir bestätigen innerhalb von 24 Stunden."
+         data-en="Pick a date and time. We confirm within 24 hours.">
+        Wähle Datum und Uhrzeit. Wir bestätigen innerhalb von 24 Stunden.
+      </p>
+
+      <a href="https://sturmfrei-wien.setmore.com"
+         class="btn-primary btn-large anywhere-book-now-button"
+         data-booking-url="https://sturmfrei-wien.setmore.com"
+         data-new-tab="false"
+         rel="noopener"
+         data-de="Jetzt anfragen"
+         data-en="Request a date"
+         aria-label="Buchungsseite öffnen">
+        Jetzt anfragen
+      </a>
+
+      <p class="book-note">
+        <span data-de="Lieber per Mail?" data-en="Prefer email?">Lieber per Mail?</span>
+        <a href="mailto:sturmfrei.bookings@gmail.com">sturmfrei.bookings@gmail.com</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       5. FOOTER
+       ============================================================ -->
+  <footer class="footer" role="contentinfo">
+    <span class="footer-name">Sturmfrei Wien</span>
+    <nav class="footer-links" aria-label="Footer links">
+      <a href="mailto:sturmfrei.bookings@gmail.com">sturmfrei.bookings@gmail.com</a>
+      <a href="https://www.instagram.com/sturmfrei.wien/" target="_blank" rel="noopener">@sturmfrei.wien</a>
+      <span class="footer-location"
+            data-de="1180 Wien · Nähe U6 Währinger Straße"
+            data-en="1180 Vienna · near U6 Währinger Straße">1180 Wien · Nähe U6 Währinger Straße</span>
+    </nav>
+    <span class="footer-copy">© 2026 Sturmfrei Wien</span>
+  </footer>
+
+  <!-- Sticky CTA pill — DISABLED. The fixed nav already has a "Reservieren" CTA, so
+       a second floating button is redundant. The disco ball now fades out after the
+       hero (see disco-ball.js) instead of shrinking into this pill. -->
+  <!--
+  <div class="sticky-cta" id="stickyCta" role="complementary" aria-label="Quick booking">
+    <div class="sticky-cta-inner">
+      <span class="sticky-cta-ball-space" aria-hidden="true"></span>
+      <a href="https://sturmfrei-wien.setmore.com"
+         class="sticky-cta-btn anywhere-book-now-button"
+         data-booking-url="https://sturmfrei-wien.setmore.com"
+         data-new-tab="false"
+         rel="noopener"
+         data-de="Jetzt anfragen"
+         data-en="Request a date">
+        Jetzt anfragen
+      </a>
+    </div>
+  </div>
+  -->
+
+  <script src="main.js?v=3"></script>
+  <script type="module" src="disco-ball.js?v=3"></script>
+
+  <!-- Setmore Booking Widget — converts every .anywhere-book-now-button into an inline-modal trigger -->
+  <script id="anywhere_book_now_script" src="https://assets.setmore.com/integration/book-now/live/v1/anywhere-book-now.js"></script>
+</body>
+</html>
